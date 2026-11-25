@@ -19,7 +19,7 @@ import sys
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import yaml
 
@@ -73,7 +73,7 @@ class Handler(BaseHTTPRequestHandler):
         if p == ["v1", "tools"]:
             return self._send(200, list(self.store.tools.values()))
         if len(p) == 3 and p[:2] == ["v1", "tools"]:
-            t = self.store.tools.get(p[2])
+            t = self.store.tools.get(unquote(p[2]))
             return self._send(200, t) if t else self._send(404, {"error": "not found"})
         return self._send(404, {"error": "not found"})
 
@@ -83,7 +83,7 @@ class Handler(BaseHTTPRequestHandler):
             sync_from_bootstrap(self.store, self._body()["path"], p[2])
             return self._send(200, {"servers": len(self.store.servers), "tools": len(self.store.tools)})
         if len(p) == 4 and p[:2] == ["v1", "servers"] and p[3] == "health":
-            s = self.store.servers.get(p[2])
+            s = self.store.servers.get(unquote(p[2]))
             if not s:
                 return self._send(404, {"error": "not found"})
             s["health"] = {"status": "healthy", "last_check": "2026-11-25T00:00:00Z"}  # stub probe
